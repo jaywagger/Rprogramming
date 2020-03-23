@@ -1,8 +1,15 @@
 #크롤링 
 #클리앙 웹사이트: 심플하고 쉬운 웹사이트 https://www.clien.net/service/
 install.packages("mongolite")
-library("mongolite")
-library("stringr")
+library(stringr)
+library(mongolite)
+
+#mongoDB에 저장하기 위해서는 크로링해야 한다. 
+#mongoDB 연동 빅데이터 db에 넣는다는 뜻 
+con <- mongo(collection = "crawl",
+             db = "bigdata",
+             url = "mongodb://127.0.0.1")
+#----------------------------------------------
 
 url <- "https://www.clien.net/service/group/community?&od=T31&po=0"
 url_data <- readLines(url, encoding="UTF-8")
@@ -66,7 +73,18 @@ title_data
 final_data <- cbind(title_data,hit,url_val)
 final_data
 write.csv(final_data,"crawl_data.csv")
+#R파일로 저장 
+save(final_data,file = "crawl_data.RData")
 
-
-
+####mongoDB에 저장 ####
+#빅데이터DB 내용을 비우고
+if(con$count()>0){
+  con$drop()
+}
+class(final_data) #매트릭스로 되어있음. data.frame으로 변환해야 함 
+final_data <- data.frame(final_data)
+class(final_data)
+#mongoDB 빅데이터DB에 넣기 
+con$insert(final_data)
+#성공
 

@@ -1,11 +1,28 @@
-#크롤링 
-#클리앙 웹사이트: 심플하고 쉬운 웹사이트 https://www.clien.net/service/
-install.packages("mongolite")
-library("mongolite")
-library("stringr")
+#### 모두의 광장의 1페이지부터 10페이지의 모든 게시글 크롤링####
+# 1. 모든 페이지의 title, hit, url, content 추출 
+# 2. crawl_result.csv & RData 저장
+# 3. mongoDB저장 (300개 저장)
+# 4. for문과 if문을 활용 
 
-url <- "https://www.clien.net/service/group/community?&od=T31&po=0"
-url_data <- readLines(url, encoding="UTF-8")
+#-------------------------------------------------------------------
+#크롤링 
+library(stringr)
+library(mongolite)
+
+con <- mongo(collection = "crawl",
+             db = "bigdata",
+             url = "mongodb://127.0.0.1")
+#----------------------------------------------
+#페이지 0~9번까지 
+for(i in 0:9){
+  myurl <- paste0("https://www.clien.net/service/group/community?&od=T31&po=",i)
+  url_data <- readLines(myurl, encoding="UTF-8")
+ 
+  #title추출
+  final_filter_data <- url_data
+  
+}
+
 url_data #링크의 데이터를 가져왔다
 
 #정보확인
@@ -27,7 +44,7 @@ filter_data <- url_data[str_detect(url_data,"subject_fixed")]
 filter_data
 
 #####2. 추출한 데이터 수정: 필요한 문자열만 추출####: str_extract() => 패턴일치 리턴
-                    #후방(?<=) 전방 둘다  사용 
+#후방(?<=) 전방 둘다  사용 
 str_extract(filter_data,"(?<=\">).*(?=</span>)") #제목만 추출됌 
 
 title_data <- str_extract(filter_data,"(?<=\">).*(?=</span>)")
@@ -66,7 +83,33 @@ title_data
 final_data <- cbind(title_data,hit,url_val)
 final_data
 write.csv(final_data,"crawl_data.csv")
+#R파일로 저장 
+save(final_data,file = "crawl_data.RData")
+
+#### 컨텐츠 필터링
+final_data[,3]
+url_content <- final_data[,3]
+
+str_detect(url_content, "post_content")
+start = which(str_detect(url_content, "post_content"))
+start
+end = which(str_detect(url_content, "post_ccls"))
+end
+content_filter_data <- url_content[start:end]
+content_filter_data
 
 
 
+
+####mongoDB에 저장 ####
+#빅데이터DB 내용을 비우고
+if(con$count()>0){
+  con$drop()
+}
+class(final_data) #매트릭스로 되어있음. data.frame으로 변환해야 함 
+final_data <- data.frame(final_data)
+class(final_data)
+#mongoDB 빅데이터DB에 넣기 
+con$insert(final_data)
+#성공
 
