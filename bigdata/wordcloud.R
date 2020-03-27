@@ -1,8 +1,4 @@
-#형태소분석 
-
-# install.packages("KoNLP") 더 이상 지원이 안됌  
-#KoNLP zip 파일을 풀고 C:\IoTJY\bigdata\R\R-3.6.3\library에 붙여넣기 
-#하위도 다 설치해주기 
+#워드클라우드  
 
 install.packages("KoNLP")
 install.packages("Sejong")
@@ -11,8 +7,12 @@ install.packages("rJava")
 install.packages("tau")
 install.packages("RSQLite")
 install.packages("devtools")
+install.packages("wordcloud")
+install.packages("RColorBrewer")
 library(KoNLP)
 library(stringr)
+library(wordcloud)
+library(RColorBrewer)
 
 #### KoNLP의 함수를 테스트 
 extractNoun("롯데마트가 판매하고 있는 흑마늘 양념 치킨이 논란이 되고 있다.")
@@ -79,12 +79,23 @@ sort(tablewordlist,decreasing = T)[1:100]
 nchar("글자수")
 tablewordlist_result <- tablewordlist[nchar(names(tablewordlist))>1]
 
-sort(tablewordlist_result,decreasing = T)[1:100]
+tablewordlist_result <- sort(tablewordlist_result,decreasing = T)[1:100]
+tablewordlist_result
 
 
+#RColorBrewer
+#모든 색상 팔레트를 보여준다 
+display.brewer.all(n=10, exact.n = F)
+display.brewer.all(type="div")
+display.brewer.all(type="qual")
+display.brewer.all(type="seq")
+brewer.pal.info
 
-
-
-
-
-
+#분석한 결과가 저장되어 있는 tablewordlist_result의 값을 단어와 숫자를 각각 저장
+word <- names(tablewordlist_result)
+word
+count <- as.numeric(tablewordlist_result)
+count
+mycolor <- brewer.pal(n=11, name = "Set3")
+wordcloud(words = word, freq = count, random.order = F, colors = mycolor, scale = c(7,0.3))
+wordcloud
